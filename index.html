@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C# Soap WS Calculator</title>
+  </head>
+  <body>
+    <input id="number1" type="number" name="" />
+    <input id="number2" type="number" name="" />
+    <input id="operation" type="text" name="" />
+    <button onclick="callSoapService()">Executar</button>
+    <input id="result" type="text" disabled />
+    <script>
+      function callSoapService() {
+        let number1 = document.getElementById("number1").value;
+        let number2 = document.getElementById("number2").value;
+        let operation = document.getElementById("operation").value;
+        let resultInput = document.getElementById("result");
+
+        var soapRequest = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+                              <soapenv:Header/>
+                              <soapenv:Body>
+                                  <tem:Run>
+                                      <tem:model>
+                                          <tem:Operation>${operation}</tem:Operation>
+                                          <tem:Number1>${number1}</tem:Number1>
+                                          <tem:Number2>${number2}</tem:Number2>
+                                      </tem:model>
+                                  </tem:Run>
+                              </soapenv:Body>
+                              </soapenv:Envelope>`;
+
+        fetch("https://ds-soap-webservice-dotnet-luka8.ondigitalocean.app/SoapService.asmx", {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/xml;charset=UTF-8",
+            SOAPAction: "http://tempuri.org/Run",
+          },
+          body: soapRequest,
+        })
+          .then((response) => response.text())
+          .then((responseData) => {
+            var parser = new DOMParser();
+            var xmlDoc = parser.parseFromString(responseData, "text/xml");
+            var result =
+              xmlDoc.getElementsByTagName("RunResult")[0].childNodes[0]
+                .nodeValue;
+            console.log("Result:", result);
+            resultInput.value = result;
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    </script>
+  </body>
+</html>
